@@ -111,17 +111,17 @@ impl FromStr for Unit {
 
 impl Display for Unit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.0 >= up_to(1_f64, TB) {
+        if self.0 >= down_from(1_f64, TB) {
             return write!(f, "{:.2}TB", up_to(self.0, TB));
         }
-        if self.0 >= up_to(1_f64, GB) {
+        if self.0 >= down_from(1_f64, GB) {
             return write!(f, "{:.2}GB", up_to(self.0, GB));
         }
-        if self.0 >= up_to(1_f64, MB) {
+        if self.0 >= down_from(1_f64, MB) {
             return write!(f, "{:.2}MB", up_to(self.0, MB));
         }
-        if self.0 >= up_to(1_f64, TB) {
-            return write!(f, "{:.2}TB", up_to(self.0, TB));
+        if self.0 >= down_from(1_f64, KB) {
+            return write!(f, "{:.2}KB", up_to(self.0, KB));
         }
         write!(f, "{}B", self.0)
     }
@@ -146,13 +146,13 @@ mod tests {
     #[test]
     fn to_string() {
         let size = Unit::from_str("10TB").unwrap();
-        assert_eq!("10TB", size.to_string());
+        assert_eq!("10.00TB", size.to_string());
         let size = Unit::from_str("10GB").unwrap();
-        assert_eq!("10GB", size.to_string());
+        assert_eq!("10.00GB", size.to_string());
         let size = Unit::from_str("10MB").unwrap();
-        assert_eq!("10MB", size.to_string());
+        assert_eq!("10.00MB", size.to_string());
         let size = Unit::from_str("10KB").unwrap();
-        assert_eq!("10KB", size.to_string());
+        assert_eq!("10.00KB", size.to_string());
         let size = Unit::from_str("10B").unwrap();
         assert_eq!("10B", size.to_string());
     }
