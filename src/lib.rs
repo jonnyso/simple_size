@@ -109,6 +109,18 @@ impl FromStr for Unit {
     }
 }
 
+impl From<u64> for Unit {
+    fn from(value: u64) -> Self {
+        Self(value as f64)
+    }
+}
+
+impl From<f64> for Unit {
+    fn from(value: f64) -> Self {
+        Self(value)
+    }
+}
+
 impl Display for Unit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.0 >= down_from(1_f64, TB) {
@@ -124,6 +136,50 @@ impl Display for Unit {
             return write!(f, "{:.2}KB", up_to(self.0, KB));
         }
         write!(f, "{}B", self.0)
+    }
+}
+
+#[cfg(feature = "serde")]
+pub mod serde {
+    use std::str::FromStr;
+
+    use serde::{Deserialize, Serialize, de::Visitor};
+
+    use crate::Unit;
+
+    impl Serialize for Unit {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            serializer.serialize_str(&self.to_string())
+        }
+    }
+
+    struct UnitVisitor;
+
+    impl<'de> Visitor<'de> for UnitVisitor {
+        type Value = Unit;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("string with the format: 99TB|GB|MB|B")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            Unit::from_str(v).map_err(E::custom)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Unit {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            deserializer.deserialize_str(UnitVisitor)
+        }
     }
 }
 
