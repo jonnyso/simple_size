@@ -22,7 +22,7 @@ const fn up_to(lhs: f64, dec: u32) -> f64 {
     lhs / (2_u64.pow(dec) as f64)
 }
 
-#[derive(PartialEq, PartialOrd)]
+#[derive(PartialEq, PartialOrd, Debug)]
 pub struct Unit(f64);
 
 macro_rules! impl_op {
@@ -188,15 +188,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn as_bytes() {
-        assert_eq!(1_f64, Unit::from_str("1B").unwrap().as_bytes());
-        assert_eq!(1024_f64, Unit::from_str("1KB").unwrap().as_bytes());
-        assert_eq!(1_048_576_f64, Unit::from_str("1MB").unwrap().as_bytes());
-        assert_eq!(1_073_741_824_f64, Unit::from_str("1GB").unwrap().as_bytes());
-        assert_eq!(
-            1_099_511_627_776_f64,
-            Unit::from_str("1TB").unwrap().as_bytes()
-        );
+    fn from_str() {
+        assert_eq!(Unit(1_f64), Unit::from_str("1B").unwrap());
+        assert_eq!(Unit(1024_f64), Unit::from_str("1KB").unwrap());
+        assert_eq!(Unit(1_048_576_f64), Unit::from_str("1MB").unwrap());
+        assert_eq!(Unit(1_073_741_824_f64), Unit::from_str("1GB").unwrap());
+        assert_eq!(Unit(1_099_511_627_776_f64), Unit::from_str("1TB").unwrap());
+    }
+
+    #[test]
+    fn from_str_negative() {
+        assert_eq!(Unit(-1_f64), Unit::from_str("-1B").unwrap());
+        assert_eq!(Unit(-1024_f64), Unit::from_str("-1KB").unwrap());
+        assert_eq!(Unit(-1_048_576_f64), Unit::from_str("-1MB").unwrap());
+        assert_eq!(Unit(-1_073_741_824_f64), Unit::from_str("-1GB").unwrap());
+        assert_eq!(Unit(-1_099_511_627_776_f64), Unit::from_str("-1TB").unwrap());
     }
 
     #[test]
@@ -211,5 +217,19 @@ mod tests {
         assert_eq!("10.00KB", size.to_string());
         let size = Unit::from_str("10B").unwrap();
         assert_eq!("10B", size.to_string());
+    }
+
+    #[test]
+    fn to_string_negative() {
+        let size = Unit::from_str("-10TB").unwrap();
+        assert_eq!("-10.00TB", size.to_string());
+        let size = Unit::from_str("-10GB").unwrap();
+        assert_eq!("-10.00GB", size.to_string());
+        let size = Unit::from_str("-10MB").unwrap();
+        assert_eq!("-10.00MB", size.to_string());
+        let size = Unit::from_str("-10KB").unwrap();
+        assert_eq!("-10.00KB", size.to_string());
+        let size = Unit::from_str("-10B").unwrap();
+        assert_eq!("-10B", size.to_string());
     }
 }
