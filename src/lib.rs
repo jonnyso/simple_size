@@ -123,16 +123,21 @@ impl From<f64> for Unit {
 
 impl Display for Unit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.0 >= down_from(1_f64, TB) {
+        let value = if self.0.is_sign_negative() {
+            self.0 * -1_f64
+        } else {
+            self.0
+        };
+        if value >= down_from(1_f64, TB) {
             return write!(f, "{:.2}TB", up_to(self.0, TB));
         }
-        if self.0 >= down_from(1_f64, GB) {
+        if value >= down_from(1_f64, GB) {
             return write!(f, "{:.2}GB", up_to(self.0, GB));
         }
-        if self.0 >= down_from(1_f64, MB) {
+        if value >= down_from(1_f64, MB) {
             return write!(f, "{:.2}MB", up_to(self.0, MB));
         }
-        if self.0 >= down_from(1_f64, KB) {
+        if value >= down_from(1_f64, KB) {
             return write!(f, "{:.2}KB", up_to(self.0, KB));
         }
         write!(f, "{}B", self.0)
@@ -202,7 +207,10 @@ mod tests {
         assert_eq!(Unit(-1024_f64), Unit::from_str("-1KB").unwrap());
         assert_eq!(Unit(-1_048_576_f64), Unit::from_str("-1MB").unwrap());
         assert_eq!(Unit(-1_073_741_824_f64), Unit::from_str("-1GB").unwrap());
-        assert_eq!(Unit(-1_099_511_627_776_f64), Unit::from_str("-1TB").unwrap());
+        assert_eq!(
+            Unit(-1_099_511_627_776_f64),
+            Unit::from_str("-1TB").unwrap()
+        );
     }
 
     #[test]
