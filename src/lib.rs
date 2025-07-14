@@ -22,7 +22,7 @@ const fn up_to(lhs: f64, dec: u32) -> f64 {
     lhs / (2_u64.pow(dec) as f64)
 }
 
-#[derive(PartialEq, PartialOrd, Debug)]
+#[derive(PartialEq, PartialOrd, Debug, Clone, Copy)]
 pub struct Unit(f64);
 
 macro_rules! impl_op {
