@@ -14,16 +14,16 @@ fn err_message(s: &str) -> String {
     format!("invalid format for unit size: {s}. Acceptable formats are nB, nKB, nMB,nGB, nTB")
 }
 
-const fn down_from(lhs: f64, dec: u32) -> f64 {
-    lhs * (2_u64.pow(dec) as f64)
+const fn down_from(lhs: f32, dec: u32) -> f32 {
+    lhs * (2_u64.pow(dec) as f32)
 }
 
-const fn up_to(lhs: f64, dec: u32) -> f64 {
-    lhs / (2_u64.pow(dec) as f64)
+const fn up_to(lhs: f32, dec: u32) -> f32 {
+    lhs / (2_u64.pow(dec) as f32)
 }
 
 #[derive(PartialEq, PartialOrd, Debug, Clone, Copy, Default)]
-pub struct Unit(f64);
+pub struct Unit(f32);
 
 macro_rules! impl_op {
     ($trait:ident, $fname:ident, $op:tt) => {
@@ -59,27 +59,27 @@ impl_op!(Mul, mul, *);
 impl_op!(Div, div, /);
 
 impl Unit {
-    pub const fn as_bytes(&self) -> f64 {
+    pub const fn as_bytes(&self) -> f32 {
         self.0
     }
 
-    pub const fn from_bytes(value: f64) -> Self {
+    pub const fn from_bytes(value: f32) -> Self {
         Self(value)
     }
 
-    pub const fn from_kilo_bytes(value: f64) -> Self {
+    pub const fn from_kilo_bytes(value: f32) -> Self {
         Self(down_from(value, KB))
     }
 
-    pub const fn from_mega_bytes(value: f64) -> Self {
+    pub const fn from_mega_bytes(value: f32) -> Self {
         Self(down_from(value, MB))
     }
 
-    pub const fn from_giga_bytes(value: f64) -> Self {
+    pub const fn from_giga_bytes(value: f32) -> Self {
         Self(down_from(value, GB))
     }
 
-    pub const fn from_tera_bytes(value: f64) -> Self {
+    pub const fn from_tera_bytes(value: f32) -> Self {
         Self(down_from(value, TB))
     }
 }
@@ -95,7 +95,7 @@ impl FromStr for Unit {
         let value = value
             .trim()
             .replace(",", ".")
-            .parse::<f64>()
+            .parse::<f32>()
             .map_err(|err| format!("{}: {}", err_message(s), err))?;
         let unit = unit.trim();
         Ok(match unit {
@@ -111,12 +111,12 @@ impl FromStr for Unit {
 
 impl From<u64> for Unit {
     fn from(value: u64) -> Self {
-        Self(value as f64)
+        Self(value as f32)
     }
 }
 
-impl From<f64> for Unit {
-    fn from(value: f64) -> Self {
+impl From<f32> for Unit {
+    fn from(value: f32) -> Self {
         Self(value)
     }
 }
@@ -124,20 +124,20 @@ impl From<f64> for Unit {
 impl Display for Unit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let value = if self.0.is_sign_negative() {
-            self.0 * -1_f64
+            self.0 * -1_f32
         } else {
             self.0
         };
-        if value >= down_from(1_f64, TB) {
+        if value >= down_from(1_f32, TB) {
             return write!(f, "{:.2}TB", up_to(self.0, TB));
         }
-        if value >= down_from(1_f64, GB) {
+        if value >= down_from(1_f32, GB) {
             return write!(f, "{:.2}GB", up_to(self.0, GB));
         }
-        if value >= down_from(1_f64, MB) {
+        if value >= down_from(1_f32, MB) {
             return write!(f, "{:.2}MB", up_to(self.0, MB));
         }
-        if value >= down_from(1_f64, KB) {
+        if value >= down_from(1_f32, KB) {
             return write!(f, "{:.2}KB", up_to(self.0, KB));
         }
         write!(f, "{}B", self.0)
@@ -194,21 +194,21 @@ mod tests {
 
     #[test]
     fn from_str() {
-        assert_eq!(Unit(1_f64), Unit::from_str("1B").unwrap());
-        assert_eq!(Unit(1024_f64), Unit::from_str("1KB").unwrap());
-        assert_eq!(Unit(1_048_576_f64), Unit::from_str("1MB").unwrap());
-        assert_eq!(Unit(1_073_741_824_f64), Unit::from_str("1GB").unwrap());
-        assert_eq!(Unit(1_099_511_627_776_f64), Unit::from_str("1TB").unwrap());
+        assert_eq!(Unit(1_f32), Unit::from_str("1B").unwrap());
+        assert_eq!(Unit(1024_f32), Unit::from_str("1KB").unwrap());
+        assert_eq!(Unit(1_048_576_f32), Unit::from_str("1MB").unwrap());
+        assert_eq!(Unit(1_073_741_824_f32), Unit::from_str("1GB").unwrap());
+        assert_eq!(Unit(1_099_511_627_776_f32), Unit::from_str("1TB").unwrap());
     }
 
     #[test]
     fn from_str_negative() {
-        assert_eq!(Unit(-1_f64), Unit::from_str("-1B").unwrap());
-        assert_eq!(Unit(-1024_f64), Unit::from_str("-1KB").unwrap());
-        assert_eq!(Unit(-1_048_576_f64), Unit::from_str("-1MB").unwrap());
-        assert_eq!(Unit(-1_073_741_824_f64), Unit::from_str("-1GB").unwrap());
+        assert_eq!(Unit(-1_f32), Unit::from_str("-1B").unwrap());
+        assert_eq!(Unit(-1024_f32), Unit::from_str("-1KB").unwrap());
+        assert_eq!(Unit(-1_048_576_f32), Unit::from_str("-1MB").unwrap());
+        assert_eq!(Unit(-1_073_741_824_f32), Unit::from_str("-1GB").unwrap());
         assert_eq!(
-            Unit(-1_099_511_627_776_f64),
+            Unit(-1_099_511_627_776_f32),
             Unit::from_str("-1TB").unwrap()
         );
     }
