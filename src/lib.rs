@@ -143,12 +143,6 @@ impl FromStr for Unit {
     }
 }
 
-impl From<u64> for Unit {
-    fn from(value: u64) -> Self {
-        Self(value as f32)
-    }
-}
-
 impl From<f32> for Unit {
     fn from(value: f32) -> Self {
         Self(value)
