@@ -1,6 +1,7 @@
 use paste::paste;
 use std::{
     fmt::Display,
+    num::ParseFloatError,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
     str::FromStr,
 };
@@ -9,10 +10,6 @@ const KB: u32 = 10;
 const MB: u32 = 20;
 const GB: u32 = 30;
 const TB: u32 = 40;
-
-fn err_message(s: &str) -> String {
-    format!("invalid format for unit size: {s}. Acceptable formats are nB, nKB, nMB,nGB, nTB")
-}
 
 const fn down_from(lhs: f32, dec: u32) -> f32 {
     lhs * (2_u64.pow(dec) as f32)
@@ -84,19 +81,56 @@ impl Unit {
     }
 }
 
+#[derive(Debug)]
+pub struct UnitFromStrErr {
+    input: String,
+    parse_err: Option<ParseFloatError>,
+}
+
+impl UnitFromStrErr {
+    fn new(input: &str, parse_err: ParseFloatError) -> Self {
+        Self {
+            input: input.to_owned(),
+            parse_err: Some(parse_err),
+        }
+    }
+
+    fn from_input(input: &str) -> Self {
+        Self {
+            input: input.to_owned(),
+            parse_err: None,
+        }
+    }
+}
+
+impl Display for UnitFromStrErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let formats = "acceptable formats are nB, nKB, nMB, nGB, nTB";
+        write!(f, "invalid format for unit: {}", self.input)?;
+        match self.parse_err.as_ref() {
+            Some(err) => write!(f, " ({err}), {formats}"),
+            None => write!(f, ", {formats}"),
+        }
+    }
+}
+
+impl std::error::Error for UnitFromStrErr {}
+
 impl FromStr for Unit {
-    type Err = String;
+    type Err = UnitFromStrErr;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let index = s.rfind(char::is_numeric).ok_or_else(|| err_message(s))?;
+        let index = s
+            .rfind(char::is_numeric)
+            .ok_or_else(|| UnitFromStrErr::from_input(s))?;
         let (value, unit) = s
             .split_at_checked(index + 1)
-            .ok_or_else(|| err_message(s))?;
+            .ok_or_else(|| UnitFromStrErr::from_input(s))?;
         let value = value
             .trim()
             .replace(",", ".")
             .parse::<f32>()
-            .map_err(|err| format!("{}: {}", err_message(s), err))?;
+            .map_err(|err| UnitFromStrErr::new(s, err))?;
         let unit = unit.trim();
         Ok(match unit {
             "B" => Self::from_bytes(value),
@@ -104,7 +138,7 @@ impl FromStr for Unit {
             "MB" => Self::from_mega_bytes(value),
             "GB" => Self::from_giga_bytes(value),
             "TB" => Self::from_tera_bytes(value),
-            _ => return Err(err_message(s)),
+            _ => return Err(UnitFromStrErr::from_input(s)),
         })
     }
 }
